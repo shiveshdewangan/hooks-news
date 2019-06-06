@@ -11,6 +11,7 @@ const INITIAL_STATE = {
 
 function Login(props) {
   const [login, setLogin] = useState(true);
+  const [firebaseError, setFirebaseError] = useState(null);
   const {
     handleChange,
     handleSubmit,
@@ -20,13 +21,19 @@ function Login(props) {
     isSubmitting
   } = useFormValidation(INITIAL_STATE, validateLogin, authenticateUser);
 
-  const authenticateUser = async () => {
+  async function authenticateUser() {
     const { name, email, password } = values;
-    const response = login
-      ? await firebase.login(email, password)
-      : await firebase.register(name, email, password);
-    console.log("response", response);
-  };
+
+    try {
+      login
+        ? await firebase.login(email, password)
+        : await firebase.register(name, email, password);
+      props.history.push("/");
+    } catch (error) {
+      console.log("Authentication Error", error);
+      setFirebaseError(error.message);
+    }
+  }
 
   return (
     <div>
@@ -63,6 +70,7 @@ function Login(props) {
           placeholder="Choose a secure password"
         />
         {errors.password && <p className="error-text">{errors.password}</p>}
+        {firebaseError && <p className="error-text">{firebaseError}</p>}
         <div className="flex mt3">
           <button
             type="submit"
